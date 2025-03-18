@@ -1,87 +1,62 @@
 close all
 clear all
 
-purple = [117 26 255]./255;
-
 
 % Define the parameters
-theta = 0.8;   
-d = 0.1;       
-k = 4;         
-mu = 0.2;      
-sigma = 0.5;   
+aa=[0:0.1:2];
+mumu=[1:0.2:4];
+M=length(aa);
+R=length(mumu);
+d = 0.2;
+%k = 2;         
+%mu = 1;      
+sigma = 0;   
 gamma = 1;   
-tau = 0.4;   
-alpha = 0.1;
+tau = 0.8;   
+alpha = 0;
 
 
 % Define the time span for the simulation
-tspan = [0, 2000]; 
+tspan = [0, 200]; 
 
 % Initial conditions
-x0 = 0.001; 
-y0 = 0.05;
-z0 = 10; 
+options = odeset('RelTol',1e-6,'AbsTol',1e-8,'NonNegative',1);
+L=100;
+for i=1:L
+    y0(i) = rand; 
+    z0(i) = rand*0.2; 
+end
 
-% Define the ODE system as a function
-ode_system = @(t, y) [
- ((theta + d*(1-theta))*(d*min(y(1),1) + (1-d)*min(y(2),1))*min(y(1),1) + (1-d)*(1-theta)*(d*min(y(1),1) + (1-d)*min(y(2),1) + mu*y(3) + alpha)*min(y(2),1))*(1-min(y(1),1)) - (1 - d*min(y(1),1) - (1-d)*min(y(2),1) + k - sigma)*(1 - (theta + d*(1-theta))*min(y(1),1) - (1-d)*(1-theta)*min(y(2),1))*min(y(1),1);
-    ((1 - d*(1-theta))*(d*min(y(1),1) + (1-d)*min(y(2),1) + mu*y(3) + alpha)*min(y(2),1) + d*(1-theta)*(d*min(y(1),1) + (1-d)*min(y(2),1))*min(y(1),1))*(1-min(y(2),1)) - (1 - d*min(y(1),1) - (1-d)*min(y(2),1) + k - sigma)*(1 - d*(1-theta)*min(y(1),1) - (1 - d*(1-theta))*min(y(2),1))*min(y(2),1);
-    (gamma*(1 - d*min(y(1),1) - (1-d)*min(y(2),1)) - tau) * y(3)
-];
 
-% ode_system = @(t, y) [
-%  ((theta + d*(1-theta))*(d*y(1) + (1-d)*y(2))*y(1) + (1-d)*(1-theta)*(d*y(1) + (1-d)*y(2) + mu*y(3) + alpha)*y(2))*(1-y(1)) - (1 - d*y(1) - (1-d)*y(2) + k - sigma)*(1 - (theta + d*(1-theta))*y(1) - (1-d)*(1-theta)*y(2))*y(1);
-%     ((1 - d*(1-theta))*(d*y(1) + (1-d)*y(2) + mu*y(3) + alpha)*y(2) + d*(1-theta)*(d*y(1) + (1-d)*y(2))*y(1))*(1-y(2)) - (1 - d*y(1) - (1-d)*y(2) + k - sigma)*(1 - d*(1-theta)*y(1) - (1 - d*(1-theta))*y(2))*y(2);
-%     (gamma*(1 - d*y(1) - (1-d)*y(2)) - tau) * y(3)
-% ];
+for r=1:R
+    mu=mumu(r);
+    for i=1:M
+        k=4-aa(i);
+        ode_system = @(t, y) [y(1)*(1-y(1))*(2*(1-d)*y(1)+mu*y(2)+alpha-k-1);
+         (gamma*(1 - (1-d)*max(y(1),0)) - tau) * max(y(2),0)];
+        count=0;
+        for j=1:L
+            [t, Y] = ode45(ode_system, tspan, [y0(j), z0(j)],options);
+            z = Y(:, 2);
+            if max(z)<=200
+                mx_t(j)=max(z);
+                av_t(j)=mean(z);
+                count=count+1;
+            end
+        end
+    display(strcat('Simulations:',num2str(round((i+(r-1)*M)*100/(M*R))),'%'))
+    mx(i,r)=sum(mx_t)/count;
+    av(i,r)=sum(av_t)/count;
+    clear mx_t av_t
+    end
+end
 
-% Solve the ODEs
-[t, Y] = ode45(ode_system, tspan, [x0, y0, z0]);
+%plot 4e
+figure
+surf(aa,mumu,mx')
+view(0,90)
 
-% Extract the solution components
- p = Y(:, 1);
- q = Y(:, 2);
- z = Y(:, 3);
- x = d*p +(1-d)*q;
-
-% Plot the expression d*x_D + (1-d)*x_C on the x-axis and epsilon on the y-axis
-
- figure;
- plot(p, z, 'LineWidth', 1.5,'Color','r');
-   xlim([0 1])
-   ylim([0 60])
- xlabel('Responsible behaviour of deniers $x_{\mathcal{D}}$','interpreter', 'latex','FontSize', 23);
- ylabel('Environmental impact $\varepsilon$', 'interpreter', 'latex','FontSize', 23);
-%title('Trajectory');
- grid on;
-
- figure;
- plot(q, z, 'LineWidth', 1.5,'Color','b');
-   xlim([0 1])
-   ylim([0 60])
- xlabel('Responsible behaviour of acknowledgers $x_{\mathcal{C}}$','interpreter', 'latex','FontSize', 23);
- ylabel('Environmental impact $\varepsilon$', 'interpreter', 'latex','FontSize', 23);
-%title('Trajectory');
- grid on;
-
-figure;
- plot(x, z, 'LineWidth', 1.5,'Color',purple);
-   xlim([0 1])
-   ylim([0 60])
- xlabel('Responsible behaviour of total population $x$','interpreter', 'latex','FontSize', 23);
- ylabel('Environmental impact $\varepsilon$', 'interpreter', 'latex','FontSize', 23);
-%title('Trajectory');
- grid on;
-
-% Create a 3D trajectory plot
- figure;
- plot3(q, p, z, 'LineWidth', 1.5,'Color','b');
-  xlim([0 1])
-  ylim([0 1])
- zlim([0 60])
-xlabel('$$x_{\mathcal{C}}$$', 'interpreter', 'latex','FontSize', 20);
- ylabel('$x_{\mathcal{D}}$', 'interpreter', 'latex','FontSize', 20);
- zlabel('Environmental impact $$\varepsilon$$', 'interpreter', 'latex','FontSize', 20);
-% title('3D Trajectory Plot');
- grid on;
+%plot 4f
+figure
+surf(aa,mumu,av')
+view(0,90)
