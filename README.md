@@ -1,12 +1,12 @@
 # bem
 
-Code used in the paper "A behavioural-environmental model to study the impact of climate change denial on environmental degradation" by K. Frieswijk, L. Zino, and M. Cao
+Code used in the paper "A behavioural-environmental model to study the impact of climate change denial on environmental degradation" by K. Frieswijk, L. Zino, A. S. Morse, and M. Cao
 
 INSTRUCTIONS AND SYSTEM REQUIREMENTS:
 
 The code for the simulation is written in MATLAB, using version 2023a and requires no add-ons. All the functions needed are included in the folder. Hence, to run the code it is sufficient to open the folder with MATLAB.
 
-The code has been tested on a PC with 16GB RAM and CPU 1.9 GHz with OS Windows 10 (64-bit). 
+The code has been tested on a PC with 16GB RAM and CPU 1.1 GHz with OS Windows 11 (64-bit). 
 
 ORGANIZATION:
 
